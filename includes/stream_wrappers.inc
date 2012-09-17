@@ -373,17 +373,27 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
     if (!isset($uri)) {
       $uri = $this->uri;
     }
-    $path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
-    $realpath = realpath($path);
-    if (!$realpath) {
-      // This file does not yet exist.
-      $realpath = realpath(dirname($path)) . '/' . drupal_basename($path);
+    // try to use the pantheon_realpath function for faster lookups if available
+    if (strpos($uri, 'public://') === 0 && function_exists('pantheon_realpath')) {
+      $path = $this->getTarget($uri);
+      $realpath = pantheon_realpath($path);
+      if (!$realpath) {
+        return FALSE;
+      }
+      return $realpath;
+    } else { // fall-back to using php realpath()
+      $path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
+      $realpath = realpath($path);
+      if (!$realpath) {
+        // This file does not yet exist.
+        $realpath = realpath(dirname($path)) . '/' . drupal_basename($path);
+      }
+      $directory = realpath($this->getDirectoryPath());
+      if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
+        return FALSE;
+      }
+      return $realpath;
     }
-    $directory = realpath($this->getDirectoryPath());
-    if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
-      return FALSE;
-    }
-    return $realpath;
   }
 
   /**
