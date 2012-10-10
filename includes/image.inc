@@ -124,8 +124,12 @@ function image_toolkit_invoke($method, stdClass $image, array $params = array())
 function image_get_info($filepath, $toolkit = FALSE) {
   $cid = "image_get_info:$toolkit:$filepath";
   if (function_exists('pantheon_cache_get') && $cache = pantheon_cache_get($cid)) {
-    // also check stat here
-    return $cache;
+    list($scheme, $target) = explode('://', $filepath, 2);
+    $filepath = trim($target, '\/');
+    $stat = pantheon_stat($filepath);
+    if ($stat['size']	== $cache->info['file_size']) {
+      return $cache;
+    }
   }
   $details = FALSE;
   if (!is_file($filepath) && !is_uploaded_file($filepath)) {
