@@ -90,7 +90,7 @@ class PanteheonSearchApiSolrHttpTransport extends Apache_Solr_HttpTransport_Abst
     // https://index.live.getpantheon.com:449/sites/self/environments/dev/index/admin/ping?q=id:1?q=id:1
     // WHY ARG WHY!?!?!
     $parts = explode('?', $url);
-    $url = $parts[0] .'?'. $parts[1];
+    $url = (!empty($parts[1])) ? $parts[0] .'?'. $parts[1] : $parts[0];
     $client_cert = '../certs/binding.pem';
     $port = 449;
     $ch = curl_init();
