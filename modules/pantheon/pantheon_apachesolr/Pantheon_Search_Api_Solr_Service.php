@@ -164,8 +164,9 @@ class PanteheonSearchApiSolrHttpTransport extends Apache_Solr_HttpTransport_Abst
       $result->response = NULL;
     }
     else {
-      $response = json_decode($result->data);
-      if (is_object($response)) {
+      @$result_data_xml = simplexml_load_string($result->data);
+      $response = ($result_data_xml) ? json_decode(json_encode((array) simplexml_load_string($result->data)),1): $result->data;
+      if (is_array($response) || is_object($response)) {
         foreach ($response as $key => $value) {
           $result->$key = $value;
         }
@@ -175,7 +176,13 @@ class PanteheonSearchApiSolrHttpTransport extends Apache_Solr_HttpTransport_Abst
     // drupal_set_message("$url: $result->code");
 
     $type = isset($result->headers['content-type']) ? $result->headers['content-type'] : 'text/xml';
-    $body = isset($result->data) ? $result->data : NULL;
+    if (isset($result->data)) {
+      @$result_data_xml = simplexml_load_string($result->data);
+      $body = $result_data_xml ? json_encode((array) simplexml_load_string($result->data)) : $result->data;
+    }
+    else {
+      $body = NULL;
+    }
     return new Apache_Solr_HttpTransport_Response($result->code, $type, $body);
   }
 
