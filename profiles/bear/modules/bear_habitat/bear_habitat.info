@@ -18,3 +18,10 @@ features[variable][] = habitat_enable_prod
 features[variable][] = habitat_enable_test
 features[variable][] = habitat_habitats
 features[variable][] = habitat_variable
+
+; Information added by Drupal.org packaging script on 2014-08-20
+version = "7.x-1.5"
+core = "7.x"
+project = "bear"
+datestamp = "1408573432"
+

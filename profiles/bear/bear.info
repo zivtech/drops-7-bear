@@ -70,3 +70,10 @@ files[] = bear.profile
 
 # System Requirements
 php_memory_limit = 128M
+
+; Information added by Drupal.org packaging script on 2014-08-20
+version = "7.x-1.5"
+core = "7.x"
+project = "bear"
+datestamp = "1408573432"
+

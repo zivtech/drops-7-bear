@@ -23,3 +23,10 @@ features[variable][] = error_level
 features[variable][] = file_temporary_path
 features[variable][] = preprocess_css
 features[variable][] = preprocess_js
+
+; Information added by Drupal.org packaging script on 2014-08-20
+version = "7.x-1.5"
+core = "7.x"
+project = "bear"
+datestamp = "1408573432"
+
