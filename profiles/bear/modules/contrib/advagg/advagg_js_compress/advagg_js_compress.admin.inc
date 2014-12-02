@@ -13,13 +13,20 @@
  */
 function advagg_js_compress_admin_settings_form($form, $form_state) {
   drupal_set_title(t('AdvAgg: JS Compression'));
+  $config_path = advagg_admin_config_root_path();
 
   $form = array();
+  if (variable_get('advagg_cache_level', ADVAGG_CACHE_LEVEL) < 0) {
+    $form['advagg_devel_msg'] = array(
+      '#markup' => '<p>' . t('The settings below will not have any effect because AdvAgg is currently in <a href="@devel">development mode</a>. Once the cache settings have been set to normal or agressive, JS minification will take place.', array('@devel' => url($config_path . '/advagg', array('fragment' => 'edit-advagg-cache-level')))) . '</p>',
+    );
+  }
+
   $description = '';
   $options = array(
     0 => t('Disabled'),
     1 => t('JSMin+'),
-//     2 => t('Packer'),
+    // 2 => t('Packer'),
   );
   if (function_exists('jsmin')) {
     $options[3] = t('JSMin');
@@ -130,7 +137,7 @@ function advagg_js_compress_admin_settings_form_submit($form, &$form_state) {
     cache_clear_all('*', $bin, TRUE);
   }
 
-  // Get current defaults
+  // Get current defaults.
   $file_settings = variable_get('advagg_js_compressor_file_settings', array());
 
   // Save per file settings.

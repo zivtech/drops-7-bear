@@ -12,6 +12,15 @@ define('PANELIZER_VERSION', '3.0');
 // Drupal core hooks
 
 /**
+ * Implements hook_help().
+ */
+function panelizer_help($path, $arg) {
+  if ($path == 'admin/config/content/panelizer') {
+    return '<p>' . t('Other than "Full page override" or "Default" (when applicable), only view modes enabled through the Custom Display Settings section of the <em>Manage Display</em> settings for that entity or bundle will be available for use.') . '</p>';
+  }
+}
+
+/**
  * Implements hook_hook_info().
  */
 function panelizer_hook_info() {
@@ -216,12 +225,13 @@ function panelizer_panels_default_settings_submit($form, &$form_state) {
 }
 
 /**
- * Implements hook_page_alter().
+ * Implements hook_process_page().
  */
-function panelizer_page_alter(&$page) {
+function panelizer_process_page(&$variables) {
   // Delegate.
+  // We target the theme layer to ensure we can manipulate the overview table.
   foreach (panelizer_get_plugins_with_hook('page_alter') as $handler) {
-    $handler->hook_page_alter($page);
+    $handler->hook_page_alter($variables['page']);
   }
 }
 
@@ -1146,6 +1156,8 @@ function panelizer_context_cache_clear($entity_type, $key) {
 // Panels edit cache contexts.
 
 /**
+ * Implements hook_panels_cache_get().
+ *
  * Get display edit cache for a panel being edited.
  *
  * The key is the second half of the key in this form:
@@ -1228,6 +1240,8 @@ function panelizer_panels_cache_get($argument) {
 }
 
 /**
+ * Implements hook_panels_cache_set().
+ *
  * Store a display edit in progress in the page cache.
  */
 function panelizer_panels_cache_set($argument, $cache) {
@@ -1237,6 +1251,8 @@ function panelizer_panels_cache_set($argument, $cache) {
 }
 
 /**
+ * Implements hook_panels_cache_clear().
+ *
  * Save all changes made to a display using the Page Manager page cache.
  */
 function panelizer_panels_cache_clear($argument, $cache) {
@@ -1246,6 +1262,8 @@ function panelizer_panels_cache_clear($argument, $cache) {
 }
 
 /**
+ * Implements hook_panels_cache_save().
+ *
  * Save all changes made to a display using the Page Manager page cache.
  */
 function panelizer_panels_cache_save($argument, $cache) {

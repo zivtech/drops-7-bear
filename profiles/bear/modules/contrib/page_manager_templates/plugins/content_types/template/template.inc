@@ -111,6 +111,10 @@ function page_manager_templates_template_content_type_edit_form_submit($form, &$
       $form_state['conf']['base'] = $form_state['values']['module'];
     }
     $form_state['conf']['theme_function'] = $form_state['conf']['base'] . '_template_' . str_replace("-", "_", $form_state['values']['template']);
+
+    // Reset the page manager templates registry.
+    cache_clear_all('page_manager_templates_registry', 'cache');
+    _page_manager_templates_check_registry();
   }
 }
 
@@ -118,8 +122,10 @@ function page_manager_templates_template_content_type_edit_form_submit($form, &$
  * Put the output for your content type in the pane object's content.
  */
 function page_manager_templates_template_content_type_render($subtype, $conf, $args, $context) {
-
   $pane = new stdClass();
+  if ($conf['hook_theme']) {
+    _page_manager_templates_check_registry();
+  }
   $pane->content = theme($conf['theme_function'], $context);
   return $pane;
 }

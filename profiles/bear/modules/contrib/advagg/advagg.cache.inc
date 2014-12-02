@@ -11,7 +11,7 @@
 /**
  * Uses the database to scan CSS/JS files for changes.
  *
- * @return
+ * @return array
  *   array of files that have changed.
  */
 function advagg_scan_for_changes() {
@@ -22,10 +22,21 @@ function advagg_scan_for_changes() {
     ->execute();
   if (!empty($result)) {
     module_load_include('inc', 'advagg', 'advagg');
+    $filenames = array();
+
+    $data = array();
     foreach ($result as $row) {
-      $row = (array)$row;
-      // Get filesystem data.
-      $info = advagg_get_info_on_file($row['filename'], TRUE);
+      $filenames[] = $row->filename;
+      $data[$row->filename] = (array) $row;
+    }
+
+    // Get filesystem data.
+    $files_info = advagg_get_info_on_files($filenames, TRUE);
+    foreach ($files_info as $info) {
+      if (!isset($data[$info['data']])) {
+        continue;
+      }
+      $row = $data[$info['data']];
 
       // Select the keys to compare.
       $keys_to_compare = array(
@@ -41,7 +52,7 @@ function advagg_scan_for_changes() {
         }
       }
       // Compare mtime if it is not zero.
-      if (!$changed && !empty($info['mtime']) && $row['mtime'] != $info['mtime']) {
+      if (!$changed && empty($info['split']) && !empty($info['mtime']) && $row['mtime'] != $info['mtime']) {
         $changed = TRUE;
       }
 
@@ -61,17 +72,6 @@ function advagg_scan_for_changes() {
       // If file has changed, add it to the array.
       if ($changed) {
         $files_that_have_changed[$row['filename']] = $info;
-
-        // Remove non advagg core attributes so advagg contrib can react to new
-        // changes to the file.
-        $keys_to_keep = array('filesize' => 1, 'mtime' => 1, 'filename_hash' => 1, 'content_hash' => 1, 'linecount' => 1);
-        $info = array_intersect_key($info, $keys_to_keep);
-
-        // Save results.
-        $filename_hashes = &drupal_static('advagg_get_info_on_file');
-        $cache_id = 'advagg:file:' . $info['filename_hash'];
-        $filename_hashes[$cache_id] = $info;
-        cache_set($cache_id, $info, 'cache_advagg_info', CACHE_PERMANENT);
       }
     }
   }
@@ -82,7 +82,7 @@ function advagg_scan_for_changes() {
 /**
  * Flush the correct caches so CSS/JS changes go live.
  *
- * @return
+ * @return array
  *   array of files that have changed and caches flushed.
  */
 function advagg_push_new_changes() {
@@ -133,9 +133,10 @@ function advagg_push_new_changes() {
 /**
  * Given a filename hash get back all aggregates that include it.
  *
- * @param $filename_hash
+ * @param string $filename_hash
  *   hash of the filename.
- * @return
+ *
+ * @return array
  *   array of aggregates that use this file.
  */
 function advagg_get_aggregates_using_file($filename_hash) {
@@ -155,7 +156,7 @@ function advagg_get_aggregates_using_file($filename_hash) {
   // Put results into $aggregates array.
   $aggregates = array();
   foreach ($query as $row) {
-    $row = (array)$row;
+    $row = (array) $row;
     $row['cid'] = 'advagg:db:' . $row['aggregate_filenames_hash'] . ADVAGG_SPACE . $row['aggregate_contents_hash'];
     $aggregates[] = $row;
   }
@@ -165,7 +166,7 @@ function advagg_get_aggregates_using_file($filename_hash) {
 /**
  * Scan CSS/JS advagg dir & remove that file if atime is grater than 30 days.
  *
- * @return
+ * @return array
  *   array of files that got removed.
  */
 function advagg_delete_stale_aggregates() {
@@ -185,9 +186,10 @@ function advagg_delete_stale_aggregates() {
 /**
  * Given an array of files remove that file if atime is grater than 30 days.
  *
- * @param $files
+ * @param array $files
  *   Array of files returned by file_scan_directory.
- * @return
+ *
+ * @return array
  *   array of files that got removed.
  */
 function advagg_delete_files_if_stale($files) {
@@ -201,9 +203,8 @@ function advagg_delete_files_if_stale($files) {
     if (is_array($data)) {
       list($type, $aggregate_filenames_hash, $aggregate_contents_hash, $aggregate_settings) = $data;
     }
-
-    // Can not get data on file, remove it.
     else {
+      // Can not get data on file, remove it.
       file_unmanaged_delete($uri);
       if (file_exists($uri . '.gz')) {
         file_unmanaged_delete($uri . '.gz');
@@ -248,7 +249,7 @@ function advagg_flush_all_cache_bins() {
 /**
  * Remove all files from the advagg CSS/JS directories.
  *
- * @return
+ * @return array
  *   array of all files removed.
  */
 function advagg_remove_all_aggregated_files() {
@@ -265,7 +266,7 @@ function advagg_remove_all_aggregated_files() {
  *
  * @todo Allow this value to be kept in sync across a multisite.
  *
- * @return
+ * @return int
  *   New value of advagg_global_counter.
  */
 function advagg_increment_global_counter() {
@@ -277,7 +278,7 @@ function advagg_increment_global_counter() {
 /**
  * Scan for missing files and remove the associated entries in the database.
  *
- * @return
+ * @return array
  *   Array of what files were cleared out of the database.
  */
 function advagg_remove_missing_files_from_db() {
@@ -295,7 +296,7 @@ function advagg_remove_missing_files_from_db() {
   // Find missing files.
   module_load_include('inc', 'advagg', 'advagg');
   foreach ($result as $row) {
-    $row = (array)$row;
+    $row = (array) $row;
     $info = advagg_get_info_on_file($row['filename'], TRUE);
 
     // Make sure file exists.
@@ -330,7 +331,7 @@ function advagg_remove_missing_files_from_db() {
         // accessed in the last 2 weeks.
         $can_delete = db_delete('advagg_aggregates_versions')
           ->condition('aggregate_filenames_hash', $values['aggregate_filenames_hash'])
-          ->condition('atime', REQUEST_TIME - 1209600, '<')
+          ->condition('atime', REQUEST_TIME - variable_get('advagg_remove_missing_files_from_db_time', ADVAGG_REMOVE_MISSING_FILES_FROM_DB_TIME), '<')
           ->execute();
         if ($can_delete > 0) {
           $advagg_aggregates_versions_del += $can_delete;
@@ -376,7 +377,7 @@ function advagg_remove_missing_files_from_db() {
 /**
  * Delete aggregates that have not been accessed in the last 6 weeks.
  *
- * @return
+ * @return int
  *   Count of the number of rows removed from the databases.
  */
 function advagg_remove_old_unused_aggregates() {
@@ -404,9 +405,9 @@ function advagg_remove_old_unused_aggregates() {
     }
   }
 
-  // Delete aggregate versions that have not been accessed in the last 6 weeks.
+  // Delete aggregate versions that have not been accessed in the last 45 days.
   $advagg_aggregates_versions_del += db_delete('advagg_aggregates_versions')
-    ->condition('atime', REQUEST_TIME - 3628800, '<')
+    ->condition('atime', REQUEST_TIME - variable_get('advagg_remove_old_unused_aggregates_time', ADVAGG_REMOVE_OLD_UNUSED_AGGREGATES_TIME), '<')
     ->execute();
 
   // See if any aggregates are orphaned now.
@@ -433,4 +434,20 @@ function advagg_remove_old_unused_aggregates() {
 
   // Return the total count of entires removed from the database.
   return $advagg_aggregates_versions_del + $advagg_aggregates_del;
+}
+
+/**
+ * Delete orphaned/expired advagg locks from the semaphore database table.
+ *
+ * @return int
+ *   Count of the number of rows removed from the databases.
+ */
+function advagg_cleanup_semaphore_table() {
+  // Let expiration times vary by 5 minutes.
+  $fuzz_factor = 300;
+  $results = db_delete('semaphore')
+    ->condition('name', db_like('advagg_') . '%', 'LIKE')
+    ->condition('expire', REQUEST_TIME - $fuzz_factor, '<')
+    ->execute();
+  return $results;
 }

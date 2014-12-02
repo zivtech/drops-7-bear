@@ -24,11 +24,20 @@ function page_manager_templates_ctools_plugin_api($module = NULL, $api = NULL) {
  * Implements hook_theme().
  */
 function page_manager_templates_theme() {
-  // This code (specifically page_manager_get_page_cache) is dangerous to run during a ctools export.
-  // TODO: this is a temporary hack.
-  if (function_exists('features_populate')) {
+
+  $cache = cache_get('page_manager_templates_registry');
+  if (!empty($cache->data)) {
+    return $cache->data;
+  }
+  else {
     return array();
   }
+}
+
+/**
+ * Load the theme registry values needed.
+ */
+function page_manager_templates_build_registry() {
 
   ctools_include('export');
 
@@ -89,5 +98,25 @@ function &page_manager_templates_panel_context_get_display(&$handler) {
   if (isset($handler->conf['did'])) {
     $handler->conf['display'] = panels_load_display($handler->conf['did']);
     return $handler->conf['display'];
+  }
+}
+
+/**
+ * Update the cache representing the theme registry elements needed by this module.
+ * This cache exists because it is dangerous to run page_manager_templates_build_registry
+ * during cache clears due to how it interacts with ctools exportables.
+ */
+function _page_manager_templates_check_registry() {
+  $registry = &drupal_static(__FUNCTION__);
+  if (!isset($registry)) {
+    $cache = cache_get('page_manager_templates_registry');
+    if (!empty($cache->data)) {
+      $registry = $cache->data;
+    }
+    else {
+      $registry = page_manager_templates_build_registry();
+      cache_set('page_manager_templates_registry', $registry, 'cache', CACHE_TEMPORARY);
+      drupal_theme_rebuild();
+    }
   }
 }

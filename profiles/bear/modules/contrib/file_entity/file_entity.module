@@ -954,7 +954,7 @@ function file_entity_entity_info_alter(&$entity_info) {
 
   // Ensure some of the Entity API callbacks are supported.
   $entity_info['file']['creation callback'] = 'entity_metadata_create_object';
-  $entity_info['file']['view callback'] = 'file_view_multiple';
+  $entity_info['file']['view callback'] = 'file_entity_metadata_view_file';
   $entity_info['file']['edit callback'] = 'file_entity_metadata_form_file';
   $entity_info['file']['access callback'] = 'file_entity_access';
 
@@ -1021,6 +1021,15 @@ function file_entity_field_display_file_alter(&$display, $context) {
 function file_entity_uri($file) {
   $uri['path'] = 'file/' . $file->fid;
   return $uri;
+}
+
+/**
+ * Entity API callback to view files.
+ */
+function file_entity_metadata_view_file($entities, $view_mode = 'full', $langcode = NULL) {
+  $result = file_view_multiple($entities, $view_mode, 0, $langcode);
+  // Make sure to key the result with 'file' instead of 'files'.
+  return array('file' => reset($result));
 }
 
 /**
@@ -1137,9 +1146,16 @@ function file_entity_file_formatter_file_field_view($file, $display, $langcode) 
       // Set $display['type'] to what hook_field_formatter_*() expects.
       $display['type'] = $field_formatter_type;
 
+      // Allow any attribute overrides (e.g. from the Media module) to be
+      // respected.
+      $item = (array) $file;
+      if (!empty($file->override['attributes'])) {
+        $item = array_merge($item, $file->override['attributes']);
+      }
+
       // Set $items to what file field formatters expect. See file_field_load(),
       // and note that, here, $file is already a fully loaded entity.
-      $items = array((array) $file);
+      $items = array($item);
 
       // Invoke hook_field_formatter_prepare_view() and
       // hook_field_formatter_view(). Note that we are reusing field formatter
@@ -1948,7 +1964,7 @@ function file_entity_file_download($uri) {
     return file_get_content_headers($file);
   }
 
-  return -1;
+  return NULL;
 }
 
 /**

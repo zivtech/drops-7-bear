@@ -302,6 +302,10 @@ function page_manager_template_edit_settings_submit($form, &$form_state) {
       $form_state['handler']->conf['base'] = $form_state['values']['module'];
     }
     $form_state['handler']->conf['theme_function'] = $form_state['handler']->conf['base'] . '_template_' . str_replace("-", "_", $form_state['values']['template']);
+
+    // Reset the page manager templates registry.
+    cache_clear_all('page_manager_templates_registry', 'cache');
+    _page_manager_templates_check_registry();
   }
 }
 
@@ -319,6 +323,10 @@ function page_manager_template_render($handler, $base_contexts, $args, $test = T
 
   if (isset($handler->handler)) {
     ctools_context_handler_pre_render($handler, $contexts, $args);
+  }
+
+  if ($handler->conf['hook_theme']) {
+    _page_manager_templates_check_registry();
   }
 
   $content = theme($handler->conf['theme_function'], $contexts);

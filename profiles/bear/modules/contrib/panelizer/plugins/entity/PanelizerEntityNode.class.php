@@ -10,14 +10,11 @@
  * Handles node specific functionality for Panelizer.
  */
 class PanelizerEntityNode extends PanelizerEntityDefault {
-  /**
-   * True if the entity supports revisions.
-   */
-  public $supports_revisions = TRUE;
   public $entity_admin_root = 'admin/structure/types/manage/%panelizer_node_type';
   public $entity_admin_bundle = 4;
   public $views_table = 'node';
   public $uses_page_manager = TRUE;
+  public $supports_revisions = TRUE;
 
   public function entity_access($op, $entity) {
     // This must be implemented by the extending clas.
@@ -69,12 +66,12 @@ class PanelizerEntityNode extends PanelizerEntityDefault {
     if ($warn) {
       $task = page_manager_get_task('node_view');
       if (!empty($task['disabled'])) {
-        drupal_set_message('The node template page is currently not enabled in page manager. You must enable this for Panelizer to be able to panelize nodes using the "Full page override" view mode.', 'warning');
+        drupal_set_message(t('The node template page is currently not enabled in page manager. You must enable this for Panelizer to be able to panelize nodes using the "Full page override" view mode.'), 'warning', FALSE);
       }
 
       $handler = page_manager_load_task_handler($task, '', 'node_view_panelizer');
       if (!empty($handler->disabled)) {
-        drupal_set_message('The panelizer variant on the node template page is currently not enabled in page manager. You must enable this for Panelizer to be able to panelize nodes using the "Full page override" view mode.', 'warning');
+        drupal_set_message(t('The panelizer variant on the node template page is currently not enabled in page manager. You must enable this for Panelizer to be able to panelize nodes using the "Full page override" view mode.'), 'warning', FALSE);
       }
     }
   }
@@ -188,8 +185,8 @@ class PanelizerEntityNode extends PanelizerEntityDefault {
     }
   }
 
-  function render_entity($entity, $view_mode, $langcode = NULL, $args = array(), $address = NULL) {
-    $info = parent::render_entity($entity, $view_mode, $langcode, $args, $address);
+  function render_entity($entity, $view_mode, $langcode = NULL, $args = array(), $address = NULL, $extra_contexts = array()) {
+    $info = parent::render_entity($entity, $view_mode, $langcode, $args, $address, $extra_contexts);
     if (!empty($entity->promote)) {
       $info['classes_array'][] = 'node-promoted';
     }

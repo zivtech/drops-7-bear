@@ -245,7 +245,7 @@ function media_youtube_file_formatter_image_view($file, $display, $langcode) {
     if (empty($image_style) || !isset($valid_image_styles[$image_style])) {
       $element = array(
         '#theme' => 'image',
-        '#path' => $wrapper->getOriginalThumbnailPath(),
+        '#path' => str_replace('http:', '', $wrapper->getOriginalThumbnailPath()),
         '#alt' => isset($file->override['attributes']['alt']) ? $file->override['attributes']['alt'] : $file->filename,
       );
     }

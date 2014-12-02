@@ -50,7 +50,10 @@ function views_ajax() {
       // such as tablesorts, exposed filters and paging assume $_GET.
       $_GET = $_POST + $_GET;
 
-      // Overwrite the destination.
+      // Overwrite the destination. On AJAX requests $_GET['q'] is set to
+      // 'views/ajax' so we actively unset this to ensure we just get the actual
+      // query parameters.
+      //
       // @see drupal_get_destination()
       $origin_destination = $path;
       $query = $_REQUEST;

@@ -1,5 +1,5 @@
 diff --git a/features.export.inc b/features.export.inc
-index 2f32c95..83e1c7a 100644
+index 2f32c95..bb83d69 100644
 --- a/features.export.inc
 +++ b/features.export.inc
 @@ -410,7 +410,7 @@ function features_detect_overrides($module) {
@@ -20,7 +20,7 @@ index 2f32c95..83e1c7a 100644
        break;
      case 'normal':
        $objects = features_get_normal($component, $module_name, $reset);
-@@ -817,6 +817,24 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
+@@ -817,6 +817,33 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
  }
  
  /**
@@ -35,7 +35,16 @@ index 2f32c95..83e1c7a 100644
 +      $objects = array();
 +    }
 +    else {
++      // Keep track of version if it was added to default feature definition.
++      $version = '';
++      if (isset($objects['version'])) {
++        $version = $objects['version'];
++      }
 +      $objects = array_intersect_key($objects, drupal_map_assoc($module->info['features'][$component]));
++      // Add back version if it was stripped.
++      if (!isset($objects['version']) && !empty($version)) {
++        $objects['version'] = $version;
++      }
 +    }
 +  }
 +  return $objects;
