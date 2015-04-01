@@ -79,9 +79,9 @@ features[user_permission][] = view style guides
 features[user_permission][] = view the administration theme
 features[user_role][] = editor
 
-; Information added by Drupal.org packaging script on 2014-12-02
-version = "7.x-1.6+28-dev"
+; Information added by Drupal.org packaging script on 2015-04-01
+version = "7.x-1.6+67-dev"
 core = "7.x"
 project = "bear"
-datestamp = "1417538516"
+datestamp = "1427914985"
 

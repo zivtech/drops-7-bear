@@ -65,9 +65,11 @@ function page_manager_templates_build_registry() {
       foreach ($task->handlers as $display) {
         if ($display->handler == 'panel_context') {
           $display = &page_manager_templates_panel_context_get_display($display);
-          foreach ($display->content as $pane) {
-            if ($pane->type == 'template') {
-              $confs[] = $pane->configuration;
+          if (isset($display->content)) {
+            foreach ($display->content as $pane) {
+              if ($pane->type == 'template') {
+                $confs[] = $pane->configuration;
+              }
             }
           }
         }

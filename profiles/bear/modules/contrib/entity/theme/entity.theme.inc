@@ -169,7 +169,7 @@ function template_preprocess_entity(&$variables) {
   $variables['title'] = check_plain(entity_label($entity_type, $entity));
 
   $uri = entity_uri($entity_type, $entity);
-  $variables['url'] = ($uri && !empty($uri['path'])) ? url($uri['path'], $uri['options']) : FALSE;
+  $variables['url'] = $uri && !empty($uri['path']) ? url($uri['path'], $uri['options']) : FALSE;
 
   if (isset($variables['elements']['#page'])) {
     // If set by the caller, respect the page property.

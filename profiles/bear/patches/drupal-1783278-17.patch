@@ -1,0 +1,117 @@
+diff --git a/includes/common.inc b/includes/common.inc
+index 0fac772..7867ccb 100644
+--- a/includes/common.inc
++++ b/includes/common.inc
+@@ -1232,7 +1232,7 @@ function valid_url($url, $absolute = FALSE) {
+   if ($absolute) {
+     return (bool)preg_match("
+       /^                                                      # Start at the beginning of the text
+-      (?:ftp|https?|feed):\/\/                                # Look for ftp, http, https or feed schemes
++      (?:ftp:|https?:|feed:)?\/\/                             # Look for ftp, http, http, feed or scheme relative schemes
+       (?:                                                     # Userinfo (optional) which is typically
+         (?:(?:[\w\.\-\+!$&'\(\)*\+,;=]|%[0-9a-f]{2})+:)*      # a username or a username and password
+         (?:[\w\.\-\+%!$&'\(\)*\+,;=]|%[0-9a-f]{2})+@          # combination
+diff --git a/modules/menu/menu.test b/modules/menu/menu.test
+index a9bdb5f..27322ef 100644
+--- a/modules/menu/menu.test
++++ b/modules/menu/menu.test
+@@ -276,6 +276,20 @@ class MenuTestCase extends DrupalWebTestCase {
+   }
+ 
+   /**
++   * Add a menu link with a scheme-relative url.
++   */
++  function testMenuSchemeRelative() {
++    $this->drupalLogin($this->big_user);
++
++    // Make a path with query and fragment on.
++    $path = '//drupal.org';
++    $item = $this->addMenuLink(0, $path);
++
++    $this->drupalGet('admin/structure/menu/item/' . $item['mlid'] . '/edit');
++    $this->assertFieldByName('link_path', $path, 'Path is found with scheme-relative URL.');
++  }
++
++  /**
+    * Add a menu link using the menu module UI.
+    *
+    * @param integer $plid Parent menu link id.
+diff --git a/modules/simpletest/tests/common.test b/modules/simpletest/tests/common.test
+index b8ad0cc..4937beb 100644
+--- a/modules/simpletest/tests/common.test
++++ b/modules/simpletest/tests/common.test
+@@ -370,6 +370,38 @@ class CommonURLUnitTest extends DrupalWebTestCase {
+     $result = url($url);
+     $this->assertEqual($url, $result, 'External URL without protocol is not altered.');
+   }
++
++  function testSchemeRelativeUrls() {
++    $test_url = '//drupal.org';
++
++    // Verify scheme-relative URL can contain a fragment.
++    $url = $test_url . '#drupal';
++    $result = url($url);
++    $this->assertEqual($url, $result, 'Scheme-relative URL with fragment works without a fragment in $options.');
++
++    // Verify fragment can be overidden in an external URL.
++    $url = $test_url . '#drupal';
++    $fragment = $this->randomName(10);
++    $result = url($url, array('fragment' => $fragment));
++    $this->assertEqual($test_url . '#' . $fragment, $result, 'Scheme-relative URL fragment is overidden with a custom fragment in $options.');
++
++    // Verify external URL can contain a query string.
++    $url = $test_url . '?drupal=awesome';
++    $result = url($url);
++    $this->assertEqual($url, $result, 'Scheme-relative URL with query string works without a query string in $options.');
++
++    // Verify external URL can be extended with a query string.
++    $url = $test_url;
++    $query = array($this->randomName(5) => $this->randomName(5));
++    $result = url($url, array('query' => $query));
++    $this->assertEqual($url . '?' . http_build_query($query, '', '&'), $result, 'Scheme-relative URL can be extended with a query string in $options.');
++
++    // Verify query string can be extended in an external URL.
++    $url = $test_url . '?drupal=awesome';
++    $query = array($this->randomName(5) => $this->randomName(5));
++    $result = url($url, array('query' => $query));
++    $this->assertEqual($url . '&' . http_build_query($query, '', '&'), $result, 'Scheme-relative URL query string can be extended with a custom query string in $options.');
++  }
+ }
+ 
+ /**
+@@ -2033,7 +2065,7 @@ class ValidUrlTestCase extends DrupalUnitTestCase {
+    * Test valid absolute URLs.
+    */
+   function testValidAbsolute() {
+-    $url_schemes = array('http', 'https', 'ftp');
++    $url_schemes = array('http://', 'https://', 'ftp://', '//');
+     $valid_absolute_urls = array(
+       'example.com',
+       'www.example.com',
+@@ -2057,7 +2089,7 @@ class ValidUrlTestCase extends DrupalUnitTestCase {
+ 
+     foreach ($url_schemes as $scheme) {
+       foreach ($valid_absolute_urls as $url) {
+-        $test_url = $scheme . '://' . $url;
++        $test_url = $scheme . $url;
+         $valid_url = valid_url($test_url, TRUE);
+         $this->assertTrue($valid_url, format_string('@url is a valid url.', array('@url' => $test_url)));
+       }
+@@ -2068,7 +2100,7 @@ class ValidUrlTestCase extends DrupalUnitTestCase {
+    * Test invalid absolute URLs.
+    */
+   function testInvalidAbsolute() {
+-    $url_schemes = array('http', 'https', 'ftp');
++    $url_schemes = array('http://', 'https://', 'ftp://', '//');
+     $invalid_ablosule_urls = array(
+       '',
+       'ex!ample.com',
+@@ -2077,7 +2109,7 @@ class ValidUrlTestCase extends DrupalUnitTestCase {
+ 
+     foreach ($url_schemes as $scheme) {
+       foreach ($invalid_ablosule_urls as $url) {
+-        $test_url = $scheme . '://' . $url;
++        $test_url = $scheme . $url;
+         $valid_url = valid_url($test_url, TRUE);
+         $this->assertFalse($valid_url, format_string('@url is NOT a valid url.', array('@url' => $test_url)));
+       }

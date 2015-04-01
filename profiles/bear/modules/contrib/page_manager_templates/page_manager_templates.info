@@ -5,9 +5,9 @@ dependencies[] = ctools
 dependencies[] = page_manager
 package = Chaos tool suite
 
-; Information added by Drupal.org packaging script on 2014-12-01
+; Information added by Drupal.org packaging script on 2015-02-02
 version = "7.x-1.x-dev"
 core = "7.x"
 project = "page_manager_templates"
-datestamp = "1417465081"
+datestamp = "1422911881"
 

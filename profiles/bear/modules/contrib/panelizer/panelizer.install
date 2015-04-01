@@ -272,12 +272,27 @@ function panelizer_install() {
  * Implements hook_uninstall().
  */
 function panelizer_uninstall() {
-  db_delete('variable')
-    ->condition('name', 'panelizer_defaults_%', 'LIKE')
-    ->execute();
-  db_delete('variable')
-    ->condition('name', 'panelizer_node:%', 'LIKE')
-    ->execute();
+  foreach (entity_get_info() as $entity_type => $entity_info) {
+    if (isset($entity_info['bundles'])) {
+      foreach ($entity_info['bundles'] as $bundle_name => $bundle_info) {
+        // View mode variables.
+        if (!empty($entity_info['view modes'])) {
+          foreach ($entity_info['view modes'] as $view_mode => $view_info) {
+            variable_del('panelizer_' . $entity_type . ':' . $bundle_name . ':' . $view_mode . '_selection');
+          }
+        }
+        variable_del('panelizer_' . $entity_type . ':' . $bundle_name . ':default_selection');
+        variable_del('panelizer_' . $entity_type . ':' . $bundle_name . ':page_manager_selection');
+
+        // Other variables.
+        variable_del('panelizer_defaults_' . $entity_type . '_' . $bundle_name);
+        variable_del('panelizer_' . $entity_type . ':' . $bundle_name . '_allowed_layouts');
+        variable_del('panelizer_' . $entity_type . ':' . $bundle_name . '_allowed_layouts_default');
+        variable_del('panelizer_' . $entity_type . ':' . $bundle_name . '_allowed_types');
+        variable_del('panelizer_' . $entity_type . ':' . $bundle_name . '_default');
+      }
+    }
+  }
 }
 
 /**
@@ -405,16 +420,21 @@ function panelizer_update_7105() {
 }
 
 /**
- * Add the view mode to the primary key for the panelizer_entity table.
+ * Add the view_mode to the primary key for the {panelizer_entity} table.
  */
 function panelizer_update_7106() {
   // Remove the primary key.
   db_drop_primary_key('panelizer_entity');
 
-  // Add the new index
-  db_add_primary_key('panelizer_entity', array('entity_type', 'entity_id', 'revision_id', 'view_mode'));
+  // Add the new index.
+  $success = db_add_primary_key('panelizer_entity', array('entity_type', 'entity_id', 'revision_id', 'view_mode'));
 
-  return t('Added revision support.');
+  if (!$success) {
+    throw new DrupalUpdateException(t("There's a record in the panelizer_entity table which caused an update to fail. Please see <a href=\"https://www.drupal.org/node/2410251\">https://www.drupal.org/node/2410251</a> for details on fixing the problem."));
+  }
+  else {
+    return t('The Panelizer database schema has bee updated.');
+  }
 }
 
 /**
@@ -544,9 +564,6 @@ function panelizer_update_7115() {
     drupal_set_message(t('No Panelizer display records need fixing.'));
   }
 
-  // When saving an entity record, these fields are primary keys.
-  $update = array('entity_type', 'entity_id', 'revision_id', 'view_mode');
-
   // Track the number of records fixed.
   $fixed = 0;
 
@@ -575,8 +592,14 @@ function panelizer_update_7115() {
       // Assign the new display to this Panelizer record.
       $panelizer->did = $display->did;
 
-      // Update the Panelizer record.
-      drupal_write_record('panelizer_entity', $panelizer, $update);
+      // Update the {panelizer} record.
+      db_update('panelizer_entity')
+        ->fields((array) $panelizer)
+        ->condition('entity_type', $panelizer->entity_type)
+        ->condition('entity_id', $panelizer->entity_id)
+        ->condition('revision_id', $panelizer->revision_id)
+        ->condition('view_mode', $panelizer->view_mode)
+        ->execute();
 
       // Clear this entity's cache.
       $cache_clear[$panelizer->entity_type][] = $panelizer->entity_id;
@@ -591,4 +614,26 @@ function panelizer_update_7115() {
   }
 
   drupal_set_message(t('Fixed @fixed Panelizer record(s) that were using the same display.', array('@fixed' => $fixed)));
+}
+
+/**
+ * Ensure there's one display for each revision.
+ */
+function panelizer_update_7116() {
+  drupal_set_message(t('Note: the "Panelizer" tabs on content, user, term pages, etc have been renamed to "Customize display".'));
+}
+
+/**
+ * Clear the menu cache to pull in the new menu paths.
+ */
+function panelizer_update_7117() {
+  variable_set('menu_rebuild_needed', TRUE);
+  drupal_set_message(t('Note: the main Panelizer configuration page has moved to the "Structure" menu instead of the "Config" menu.'));
+}
+
+/**
+ * Reload the menus to fix the 'content' default local tasks.
+ */
+function panelizer_update_7118() {
+  variable_set('menu_rebuild_needed', TRUE);
 }

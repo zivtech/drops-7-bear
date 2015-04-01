@@ -125,7 +125,7 @@ function _panelizer_panelizer_task_get_extra_contexts($handler, $base_contexts) 
 }
 
 /**
- * Provide appropriate contextual links for Panelizer controled entities.
+ * Provide appropriate contextual links for Panelizer controlled entities.
  */
 function panelizer_panelizer_task_contextual_link($handler, $plugin, $contexts, $args) {
   $links = array();
@@ -162,26 +162,52 @@ function panelizer_panelizer_task_contextual_link($handler, $plugin, $contexts, 
     $base_path = implode('/', $bits);
     if ($entity_handler->panelizer_access('settings', $entity, 'page_manager')) {
       $links['settings'] = array(
-        'title' => t('Edit panelizer settings'),
+        'title' => t("Edit custom display settings"),
         'href' => "$base_path/settings",
       );
     }
     if ($entity_handler->panelizer_access('context', $entity, 'page_manager')) {
       $links['context'] = array(
-        'title' => t('Edit panelizer contexts'),
+        'title' => t('Edit custom display contexts'),
         'href' => "$base_path/context",
       );
     }
     if ($entity_handler->panelizer_access('layout', $entity, 'page_manager')) {
       $links['layout'] = array(
-        'title' => t('Edit panelizer layout'),
+        'title' => t('Edit custom display layout'),
         'href' => "$base_path/layout",
       );
     }
     if ($entity_handler->panelizer_access('content', $entity, 'page_manager')) {
       $links['content'] = array(
-        'title' => t('Edit panelizer content'),
+        'title' => t('Edit custom display content'),
         'href' => "$base_path/content",
+      );
+    }
+
+    $template_base_path = 'admin/structure/panelizer/node/' . $bundle . '.' . $panelizer->view_mode;
+    if ($entity_handler->panelizer_access('settings', $entity, 'page_manager')) {
+      $links['default_settings'] = array(
+        'title' => t('Edit default display settings'),
+        'href' => "$template_base_path/settings",
+      );
+    }
+    if ($entity_handler->panelizer_access('context', $entity, 'page_manager')) {
+      $links['default_context'] = array(
+        'title' => t('Edit default display contexts'),
+        'href' => "$template_base_path/context",
+      );
+    }
+    if ($entity_handler->panelizer_access('layout', $entity, 'page_manager')) {
+      $links['default_layout'] = array(
+        'title' => t('Edit default display layout'),
+        'href' => "$template_base_path/layout",
+      );
+    }
+    if ($entity_handler->panelizer_access('content', $entity, 'page_manager')) {
+      $links['default_content'] = array(
+        'title' => t('Edit default display content'),
+        'href' => "$template_base_path/content",
       );
     }
   }
@@ -386,6 +412,22 @@ function panelizer_panelizer_task_edit_settings($form, &$form_state) {
     '#title' => t('Administrative title'),
     '#description' => t('Administrative title of this variant.'),
   );
+  $name = isset($conf['name']) ? $conf['name'] : FALSE;
+  $form['name'] = array(
+    '#type' => 'machine_name',
+    '#title' => t('Machine name'),
+    '#required' => FALSE,
+    '#default_value' => $name,
+    '#description' => t("A unique machine-readable name for this variant. It must only contain lowercase letters, numbers, and underscores. This name will be used when exporting the variant. If left empty the variant's name will be used instead."),
+    '#size' => 32,
+    '#maxlength' => 32,
+    '#machine_name' => array(
+      'exists' => 'page_manager_handler_check_machine_name',
+      'source' => array('title'),
+    ),
+    '#field_prefix' => '<span dir="ltr">' . $form_state['task_name'] . '__',
+    '#field_suffix' => '</span>&lrm;',
+  );
 
   $contexts = ctools_context_handler_get_all_contexts($form_state['task'], $form_state['subtask'], $form_state['handler']);
 
@@ -396,12 +438,24 @@ function panelizer_panelizer_task_edit_settings($form, &$form_state) {
 }
 
 function panelizer_panelizer_task_edit_settings_submit($form, &$form_state) {
+  $machine_name = $form_state['handler']->name;
+  $name = $form_state['task_id'] . '__' . $form_state['values']['name'];
+
+  // If new name doesn't equal machine name, we need to update and redirect.
+  if ($machine_name !== $name) {
+    $form_state['new trail'] = $form_state['trail'];
+    $delta = array_search($machine_name, $form_state['new trail']);
+    $form_state['new trail'][$delta] = $name;
+    $form_state['handler']->name = $name;
+  }
+
   $form_state['handler']->conf['title'] = $form_state['values']['title'];
+  $form_state['handler']->conf['name'] = $form_state['values']['name'];
   $form_state['handler']->conf['context'] = $form_state['values']['context'];
 }
 
 /**
- * Set up a title for the panel based upon the selection rules.
+ * Set up a title for the display based upon the selection rules.
  */
 function panelizer_panelizer_task_title($handler, $task, $subtask) {
   if (isset($handler->conf['title'])) {

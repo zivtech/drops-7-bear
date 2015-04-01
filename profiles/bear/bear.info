@@ -5,7 +5,6 @@ core = 7.x
 # Core Extensions
 dependencies[] = contextual
 dependencies[] = block
-dependencies[] = comment
 dependencies[] = dblog
 dependencies[] = field_ui
 dependencies[] = file
@@ -26,13 +25,16 @@ dependencies[] = admin_views
 dependencies[] = bear_habitat
 dependencies[] = bear_necessities
 dependencies[] = bear_user
+dependencies[] = block_class
 dependencies[] = breadcrumbs_by_path
+dependencies[] = chosen
 dependencies[] = coffee
 dependencies[] = ctools
 dependencies[] = views_content
 dependencies[] = page_manager
 dependencies[] = date
 dependencies[] = date_popup
+dependencies[] = date_views
 dependencies[] = diff
 dependencies[] = devel
 dependencies[] = entity
@@ -40,6 +42,7 @@ dependencies[] = entity_view_mode
 dependencies[] = entitycache
 dependencies[] = entityreference
 dependencies[] = features
+dependencies[] = fences
 dependencies[] = field_group
 dependencies[] = file_entity
 dependencies[] = habitat
@@ -50,6 +53,7 @@ dependencies[] = linkit
 dependencies[] = media
 dependencies[] = media_youtube
 dependencies[] = menu_block
+dependencies[] = menu_expanded
 dependencies[] = module_filter
 dependencies[] = multiform
 dependencies[] = page_manager_templates
@@ -72,9 +76,9 @@ files[] = bear.profile
 # System Requirements
 php_memory_limit = 128M
 
-; Information added by Drupal.org packaging script on 2014-12-02
-version = "7.x-1.6+28-dev"
+; Information added by Drupal.org packaging script on 2015-04-01
+version = "7.x-1.6+67-dev"
 core = "7.x"
 project = "bear"
-datestamp = "1417538516"
+datestamp = "1427914985"
 
