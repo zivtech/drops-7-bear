@@ -3,8 +3,6 @@
 api = 2
 core = 7.x
 
-projects[drupal][version] = 7.35
-
 ; @see https://www.drupal.org/node/1934086#comment-7137850
 projects[drupal][patch][] = "http://drupal.org/files/drupal-1934086-path_load_order-1.patch"
 
@@ -21,5 +19,5 @@ projects[drupal][patch][] = "http://drupal.org/files/issues/drupal-undefinedinde
 projects[drupal][patch][] = "http://drupal.org/files/issues/death-to-tabledrag.patch"
 
 ; @see https://www.drupal.org/node/1783278#comment-9735933
- projects[drupal][patch][] = "https://www.drupal.org/files/issues/schema-relative-1783278-17-D7-do-not-test.patch"
+projects[drupal][patch][] = "https://www.drupal.org/files/issues/schema-relative-1783278-17-D7-do-not-test.patch"
 
