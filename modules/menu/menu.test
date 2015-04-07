@@ -276,6 +276,34 @@ class MenuTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Add a menu link with a scheme-relative url.
+   */
+  function testMenuSchemeRelative() {
+    $this->drupalLogin($this->big_user);
+
+    // Make a path with query and fragment on.
+    $path = '//drupal.org';
+    $item = $this->addMenuLink(0, $path);
+
+    $this->drupalGet('admin/structure/menu/item/' . $item['mlid'] . '/edit');
+    $this->assertFieldByName('link_path', $path, 'Path is found with scheme-relative URL.');
+  }
+
+  /**
+   * Add a menu link with a scheme-relative url.
+   */
+  function testMenuSchemeRelative() {
+    $this->drupalLogin($this->big_user);
+
+    // Make a path with query and fragment on.
+    $path = '//drupal.org';
+    $item = $this->addMenuLink(0, $path);
+
+    $this->drupalGet('admin/structure/menu/item/' . $item['mlid'] . '/edit');
+    $this->assertFieldByName('link_path', $path, 'Path is found with scheme-relative URL.');
+  }
+
+  /**
    * Add a menu link using the menu module UI.
    *
    * @param integer $plid Parent menu link id.
