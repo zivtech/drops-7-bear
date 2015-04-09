@@ -327,9 +327,6 @@ function field_theme() {
     'field_multiple_value_form' => array(
       'render element' => 'element',
     ),
-    'field_multiple_value_orderable_form' => array(
-      'render element' => 'element',
-    ),
   );
 }
 

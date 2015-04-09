@@ -1681,14 +1681,6 @@ function field_ui_widget_type_form($form, &$form_state, $instance) {
     '#default_value' => $instance['widget']['type'],
     '#description' => t('The type of form element you would like to present to the user when creating this field in the %type type.', array('%type' => $bundle_label)),
   );
-  if ($field['cardinality'] != 1) {
-    $form['basic']['orderable'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Orderable'),
-      '#default_value' => isset($instance['widget']['orderable']) ? $instance['widget']['orderable'] : TRUE,
-      '#description' => t('Orderable multiple fields widgets are in a table with drag and drop.'),
-    );
-  }
 
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Continue'));
@@ -1717,9 +1709,6 @@ function field_ui_widget_type_form_submit($form, &$form_state) {
 
   $instance['widget']['type'] = $form_values['widget_type'];
   $instance['widget']['module'] = $widget_module;
-  if (isset($form_values['orderable'])) {
-    $instance['widget']['orderable'] = $form_values['orderable'];
-  }
 
   try {
     field_update_instance($instance);

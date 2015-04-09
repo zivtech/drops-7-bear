@@ -201,8 +201,6 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
 
   $field_elements = array();
 
-  $orderable = !isset($instance['widget']['orderable']) || $instance['widget']['orderable'];
-
   $function = $instance['widget']['module'] . '_field_widget_form';
   if (function_exists($function)) {
     for ($delta = 0; $delta <= $max; $delta++) {
@@ -225,7 +223,7 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
       );
       if ($element = $function($form, $form_state, $field, $instance, $langcode, $items, $delta, $element)) {
         // Input field for the delta (drag-n-drop reordering).
-        if ($multiple && $orderable) {
+        if ($multiple) {
           // We name the element '_weight' to avoid clashing with elements
           // defined by widget.
           $element['_weight'] = array(
@@ -256,7 +254,7 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
 
     if ($field_elements) {
       $field_elements += array(
-        '#theme' => $orderable ? 'field_multiple_value_orderable_form' : 'field_multiple_value_form',
+        '#theme' => 'field_multiple_value_form',
         '#field_name' => $field['field_name'],
         '#cardinality' => $field['cardinality'],
         '#title' => $title,
@@ -291,45 +289,6 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
 /**
  * Returns HTML for an individual form element.
  *
- * Combine multiple values into a form element.
- * TODO : convert to a template.
- *
- * @param $variables
- *   An associative array containing:
- *   - element: A render element representing the form element.
- *
- * @ingroup themeable
- */
-function theme_field_multiple_value_form($variables) {
-  $element = $variables['element'];
-  $output = '';
-
-  if ($element['#cardinality'] > 1 || $element['#cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
-    $required = !empty($element['#required']) ? theme('form_required_marker', $variables) : '';
-    $output .= '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . '</label>';
-    foreach (element_children($element) as $key) {
-      if ($key === 'add_more') {
-        $add_more_button = &$element[$key];
-      }
-      else {
-        $output .= drupal_render($element[$key]);
-      }
-    }
-    $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
-    $output .= '<div class="clearfix">' . drupal_render($add_more_button) . '</div>';
-  }
-  else {
-    foreach (element_children($element) as $key) {
-      $output .= drupal_render($element[$key]);
-    }
-  }
-
-  return $output;
-}
-
-/**
- * Returns HTML for an individual form element.
- *
  * Combine multiple values into a table with drag-n-drop reordering.
  * TODO : convert to a template.
  *
@@ -339,7 +298,7 @@ function theme_field_multiple_value_form($variables) {
  *
  * @ingroup themeable
  */
-function theme_field_multiple_value_orderable_form($variables) {
+function theme_field_multiple_value_form($variables) {
   $element = $variables['element'];
   $output = '';
 
