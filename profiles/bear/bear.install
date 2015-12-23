@@ -31,9 +31,14 @@ function bear_install() {
         ),
       ),
       // Media Filter.
-      'media_filter' => array(
+      'assets_filter' => array(
         'weight' => 2,
         'status' => 1,
+        'settings' => array(),
+      ),
+      'kill_nbsp' => array(
+        'status' => 1,
+        'weight' => 1,
         'settings' => array(),
       ),
       // HTML corrector filter.
@@ -61,10 +66,15 @@ function bear_install() {
         'weight' => 1,
         'status' => 1,
       ),
-      // Media Filter.
-      'media_filter' => array(
+      // Assets Filter.
+      'assets_filter' => array(
         'weight' => 2,
         'status' => 1,
+        'settings' => array(),
+      ),
+      'kill_nbsp' => array(
+        'status' => 1,
+        'weight' => 1,
         'settings' => array(),
       ),
       // HTML corrector filter.
@@ -178,7 +188,6 @@ function bear_install() {
 
   // Default "Basic page" settings.
   variable_set('node_options_page', array('status', 'revision'));
-  variable_set('comment_page', COMMENT_NODE_HIDDEN);
   variable_set('node_preview_page', 0);
   variable_set('node_submitted_page', FALSE);
 
@@ -190,21 +199,63 @@ function bear_install() {
 
   // Enable default permissions for system roles.
   $filtered_html_permission = filter_permission_name($filtered_html_format);
-  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content', 'access comments', $filtered_html_permission));
-  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access content', 'access comments', 'post comments', 'skip comment approval', $filtered_html_permission));
+  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content', $filtered_html_permission));
+  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access content', $filtered_html_permission));
 
   // Create a default role for site administrators, with all available permissions assigned.
   $admin_role = new stdClass();
   $admin_role->name = 'administrator';
-  $admin_role->weight = 2;
+  $admin_role->weight = 3;
   user_role_save($admin_role);
   user_role_grant_permissions($admin_role->rid, array_keys(module_invoke_all('permission')));
   // Set this as the administrator role.
   variable_set('user_admin_role', $admin_role->rid);
 
+  // Add an editor role.
+  $editor_role = new stdClass();
+  $editor_role->name = 'editor';
+  $editor_role->weight = 2;
+  user_role_save($editor_role);
+  $perms = array(
+    'access administration menu',
+    'access administration pages',
+    'access assets overview',
+    'access coffee',
+    'access content',
+    'access content overview',
+    'access user profiles',
+    'administer assets',
+    'administer asset types',
+    'administer menu',
+    'administer nodes',
+    'administer url aliases',
+    'administer users',
+    'bypass node access',
+    'change own username',
+    'create url aliases',
+    'create asset with type document',
+    'create asset with type image',
+    'create asset with type embed',
+    'delete asset with type document',
+    'delete asset with type image',
+    'delete asset with type embed',
+    'delete revisions',
+    'edit asset with type document',
+    'edit asset with type image',
+    'edit asset with type embed',
+    'revert revisions',
+    'use text format filtered_html',
+    'use text format full_html',
+    'view own unpublished content',
+    'view revisions',
+    'view style guides',
+    'view the administration theme',
+  );
+  user_role_grant_permissions($editor_role->rid, $perms);
+
   // Enable seven and bear_skin themes and set defaults.
-  theme_enable(array('seven', 'bear_skin'));
-  variable_set('theme_default', 'bear_skin');
+  theme_enable(array('seven', 'bear_coat'));
+  variable_set('theme_default', 'bear_coat');
   variable_set('admin_theme', 'seven');
   variable_set('node_admin_theme', '1');
 }

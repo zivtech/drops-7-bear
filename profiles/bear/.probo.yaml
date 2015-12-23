@@ -1,0 +1,8 @@
+steps:
+  - name: Make and install Bear
+    plugin: Drupal
+    makeFile: build-bear.make
+    profileName: bear
+    runInstall: true
+  - name: Run behat tests
+    command: 'cd /var/www/html/profiles/bear/tests ; composer install ; ./bin/behat --profile probo --tags "~@javascript"'
