@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * Update function changing the saved YouTube URLs of video assets.
+ */
+function emvideo_youtube_update_7001() {
+  db_query("update field_data_field_asset_video_file set field_asset_video_file_source = replace(field_asset_video_file_source, '/v/', '/embed/');");
+  db_query("update field_data_field_asset_video_file set field_asset_video_file_source = replace(field_asset_video_file_source, 'http:', 'https:');");
+}
