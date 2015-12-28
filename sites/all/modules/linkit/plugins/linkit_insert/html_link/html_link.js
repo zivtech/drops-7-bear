@@ -4,22 +4,22 @@
  */
 (function ($) {
 
-Drupal.linkit.registerInsertPlugin('html_link', {
+Drupal.linkit.addInsertPlugin('html_link', {
   insert : function(data) {
-    var text,
-    selection = Drupal.settings.linkit.currentInstance.selection;
+    var linkitCache = Drupal.linkit.getLinkitCache(),
+    text;
 
      // Delete all attributes that are empty.
     for (name in data.attributes) {
       (data.attributes[name]) ? null : delete data.attributes[name];
     }
 
-    if (typeof selection != 'undefined' &&
-      selection.text.length >= 1) {
-      text = selection.text;
+    if (typeof linkitCache.selection != 'undefined' &&
+      linkitCache.selection.text.length >= 1) {
+      text = linkitCache.selection.text;
     }
     else {
-      text = Drupal.settings.linkit.currentInstance.linkContent;
+      text = linkitCache.link_tmp_title;
     }
 
     // Use document.createElement as it is mush fasten then $('<a/>).

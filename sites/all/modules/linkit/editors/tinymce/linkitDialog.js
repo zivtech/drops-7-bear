@@ -2,22 +2,20 @@
  * @file
  * Linkit tinymce dialog helper.
  */
+
+Drupal.linkit.editorDialog.tinymce = {};
+
 (function ($) {
 
-// Abort if Drupal.linkit is not defined.
-if (typeof Drupal.linkit === 'undefined') {
-  return ;
-}
-
-Drupal.linkit.registerDialogHelper('tinymce', {
+Drupal.linkit.editorDialog.tinymce = {
   init : function() {},
 
   /**
    * Prepare the dialog after init.
    */
   afterInit : function () {
-    var editor = Drupal.settings.linkit.currentInstance.editor;
-    var element, link;
+    var linkitCache = Drupal.linkit.getLinkitCache(),
+        editor = linkitCache.editor, element, link;
 
     // Restore the selection if the browser is IE.
     if (tinymce.isIE) {
@@ -31,21 +29,15 @@ Drupal.linkit.registerDialogHelper('tinymce', {
         path: editor.dom.getAttrib(element, 'href'),
         attributes: {}
       };
-
-      // Get all attributes that have fields in the modal.
-      var additionalAttributes = Drupal.linkit.additionalAttributes();
-
       // Add attributes to the link object, but only those that are enabled in Linkit.
-      tinymce.each(additionalAttributes, function(attribute) {
+      tinymce.each(Drupal.linkit.dialog.additionalAttributes(), function(attribute) {
         var value = editor.dom.getAttrib(element, attribute);
         if (value) {
           link.attributes[attribute] = value;
         }
       });
     }
-
-    // Populate the fields.
-    Drupal.linkit.populateFields(link);
+    Drupal.linkit.dialog.populateFields(link);
   },
 
   /**
@@ -55,8 +47,9 @@ Drupal.linkit.registerDialogHelper('tinymce', {
    *   The link object.
    */
   insertLink : function(data) {
-    var editor = Drupal.settings.linkit.currentInstance.editor,
-    element = editor.dom.getParent(editor.selection.getNode(), 'A');
+    var linkitCache = Drupal.linkit.getLinkitCache(),
+        editor = linkitCache.editor,
+        element = editor.dom.getParent(editor.selection.getNode(), 'A');
 
     // Restore the selection if the browser is IE.
     if (tinymce.isIE) {
@@ -66,11 +59,12 @@ Drupal.linkit.registerDialogHelper('tinymce', {
     // Set undo begin point.
     editor.execCommand("mceBeginUndoLevel");
     data.attributes.href = data.path;
+
     // No link element selected, create a new anchor element.
     if (element == null) {
       // If there is no selection, lets inser a new element.
       if (editor.selection.isCollapsed()) {
-        var content = (Drupal.settings.linkit.currentInstance.linkContent) ? Drupal.settings.linkit.currentInstance.linkContent : data.path;
+        var content = (Drupal.linkitCache.link_tmp_title) ? Drupal.linkitCache.link_tmp_title : data.path;
         editor.execCommand('mceInsertContent', false,
           editor.dom.createHTML('a', data.attributes, content));
       } else {
@@ -97,6 +91,6 @@ Drupal.linkit.registerDialogHelper('tinymce', {
     // Set undo end point.
     editor.execCommand("mceEndUndoLevel");
   }
-});
+};
 
 })(jQuery);

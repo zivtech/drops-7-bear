@@ -2,39 +2,37 @@
  * @file
  * Linkit ckeditor dialog helper.
  */
+
+Drupal.linkit.editorDialog.ckeditor = {};
+
 (function ($) {
 
-// Abort if Drupal.linkit is not defined.
-if (typeof Drupal.linkit === 'undefined') {
-  return ;
-}
-
-Drupal.linkit.registerDialogHelper('ckeditor', {
+Drupal.linkit.editorDialog.ckeditor = {
   init : function() {},
 
   /**
    * Prepare the dialog after init.
    */
   afterInit : function () {
-     var editor = Drupal.settings.linkit.currentInstance.editor;
-     var element = CKEDITOR.plugins.link.getSelectedLink( editor );
+    var linkitCache = Drupal.linkit.getLinkitCache();
 
     // If we have selected a link element, lets populate the fields in the
-    // modal with the values from that link element.
-    if (element) {
+    // dialog with the values from that link element.
+    if (linkitCache.selectedElement) {
       link = {
-        path: element.data('cke-saved-href') || element.getAttribute('href') || '',
+        path: (linkitCache.selectedElement  && (linkitCache.selectedElement.data('cke-saved-href') || linkitCache.selectedElement.getAttribute('href'))) || '',
         attributes: {}
       },
-      // Get all attributes that have fields in the modal.
-      additionalAttributes = Drupal.linkit.additionalAttributes();
+      // Get all attributes that have fields in the dialog.
+      additionalAttributes = Drupal.linkit.dialog.additionalAttributes();
 
       for (var i = 0; i < additionalAttributes.length; i++) {
-        link.attributes[additionalAttributes[i]] = element.getAttribute(additionalAttributes[i]);
-      }
+        link.attributes[additionalAttributes[i]] =
+        linkitCache.selectedElement.getAttribute(additionalAttributes[i]);
+      };
 
       // Populate the fields.
-      Drupal.linkit.populateFields(link);
+      Drupal.linkit.dialog.populateFields(link);
     }
   },
 
@@ -45,9 +43,9 @@ Drupal.linkit.registerDialogHelper('ckeditor', {
    *   The link object.
    */
   insertLink : function(link) {
-    var editor = Drupal.settings.linkit.currentInstance.editor;
-    CKEDITOR.tools.callFunction(editor._.linkitFnNum, link, editor);
+    var linkitCache = Drupal.linkit.getLinkitCache();
+    CKEDITOR.tools.callFunction(linkitCache.editor._.linkitFnNum, link, linkitCache.editor);
   }
-});
+};
 
 })(jQuery);

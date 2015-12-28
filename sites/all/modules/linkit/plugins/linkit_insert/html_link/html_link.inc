@@ -1,10 +1,8 @@
 <?php
 /**
  * @file
- * Defines the HTML link insert plugin.
  */
-
 $plugin = array(
   'name' => t('HTML Link'),
-  'javascript' => 'html_link.js',
+  'javascript' => drupal_get_path('module', 'linkit') . '/plugins/linkit_insert/html_link/html_link.js',
 );

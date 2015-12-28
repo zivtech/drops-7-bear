@@ -1,44 +1,56 @@
+<div<?php print $attributes ?>>
+  <?php foreach($content as $name => $item): ?>
+    
+    <?php if (!empty($item)): ?>
 
-<!-- top row -->
-
-<div class="bearskin-template two-columns-top-and-bottom-rows">
-
-  <div class="bearskin-row top">
-    <div class="row-inside">
-      <?php print $content['top']; ?>
-    </div>
-  </div>
-
-  <!-- middle row -->
-
-  <div class="bearskin-row middle">
-    <div class="row-inside">
-
-      <!-- left sidebar column -->
-
-      <div class="column left">
-        <div class="col-inside">
-          <?php print $content['left']; ?>
+      <?php if (!strpos($attributes, "empty-left") !== false && !strpos($attributes, "empty-right") !== false) : ?>
+        <?php if ($name == "left") : ?>
+        <div class="row center">
+          <div<?php print drupal_attributes($region_attributes_array[$name])?>>
+            <?php print $item ?>
+          </div><!-- end <?php print $name; ?> panel -->
+        <?php elseif ($name == "right") : ?>
+          <div<?php print drupal_attributes($region_attributes_array[$name])?>>
+            <?php print $item ?>
+          </div><!-- end <?php print $name; ?> panel -->
         </div>
-      </div>
+        <?php else : ?>
+        <div<?php print drupal_attributes($region_attributes_array[$name])?>>
+          <?php print $item ?>
+        </div><!-- end <?php print $name; ?> panel -->
+      <?php endif; ?>
 
-      <!-- center column -->
+    	<?php elseif (!strpos($attributes, "empty-left") !== false) : ?>
+	    	<?php if ($name == "left") : ?>
+		      <div<?php print drupal_attributes($region_attributes_array[$name])?>>
+		        <?php print $item ?>
+		      </div><!-- end <?php print $name; ?> panel -->
+		    <?php else : ?>
+		   		<div<?php print drupal_attributes($region_attributes_array[$name])?>>
+		        <?php print $item ?>
+		      </div><!-- end <?php print $name; ?> panel -->
+      <?php endif; ?>
 
-      <div class="column right">
-        <div class="col-inside">
-          <?php print $content['right']; ?>
-        </div>
-      </div>
+      <?php elseif (!strpos($attributes, "empty-right") !== false) : ?>
+        <?php if ($name == "right") : ?>
+	        <div class="row center">
+	          <div<?php print drupal_attributes($region_attributes_array[$name])?>>
+	            <?php print $item ?>
+	          </div><!-- end <?php print $name; ?> panel -->
+	        </div>
+        <?php else : ?>
+	        <div<?php print drupal_attributes($region_attributes_array[$name])?>>
+	          <?php print $item ?>
+	        </div><!-- end <?php print $name; ?> panel -->
+      <?php endif; ?>
 
-    </div>
-  </div>
+		  <?php else : ?>
+		   		<div<?php print drupal_attributes($region_attributes_array[$name])?>>
+		        <?php print $item ?>
+		      </div><!-- end <?php print $name; ?> panel -->
+	   	<?php endif; ?>
 
-  <!-- bottom row -->
+    <?php endif; ?>
 
-  <div class="bearskin-row bottom">
-    <div class="col-inside">
-      <?php print $content['bottom']; ?>
-    </div>
-  </div>
-
+  <?php endforeach; ?>
 </div>

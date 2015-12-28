@@ -65,7 +65,7 @@ function breadcrumbs_by_path_page_build(&$page) {
     // If the setting is enabled, add the current page title to the end of the
     // trail.
     if (variable_get('breadcrumbs_by_path_current_title')) {
-      $trail[] = '<span class="active active-trail">' . _breadcrumbs_by_path_clean_string(drupal_get_title()) . '</span>';
+      $trail[] = '<span class="active active-trail">' . drupal_get_title() . '</span>';
     }
 
     drupal_set_breadcrumb($trail);

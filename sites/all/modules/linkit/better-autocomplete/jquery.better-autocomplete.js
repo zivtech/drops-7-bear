@@ -5,7 +5,7 @@
  *
  * @author Didrik Nordström, http://betamos.se/
  *
- * @version v1.0-dev
+ * @version v1.0
  *
  * @requires
  *   <ul><li>
@@ -82,8 +82,6 @@
  *   </li><li>
  *     selectKeys: (default=[9, 13]) The key codes for keys which will select
  *     the current highlighted element. The defaults are tab, enter.
- *   </li><li>
- *     autoHighlight: (default=true) Automatically highlight the first result.
  *   </li></ul>
  *
  * @param {Object} [callbacks]
@@ -178,8 +176,7 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
     cacheLimit: isLocal ? 0 : 256, // Number of result objects
     remoteTimeout: 10000, // milliseconds
     crossOrigin: false,
-    selectKeys: [9, 13], // [tab, enter]
-    autoHighlight: true // Automatically highlight the topmost result
+    selectKeys: [9, 13] // [tab, enter]
   }, options);
 
   callbacks = $.extend({}, defaultCallbacks, callbacks);
@@ -204,9 +201,9 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
   };
 
   inputEvents.keydown = function(event) {
-    var index = getHighlightedIndex();
+    var index = getHighlighted();
     // If an arrow key is pressed and a result is highlighted
-    if ($.inArray(event.keyCode, [38, 40]) >= 0 && $results.children().length > 0) {
+    if ($.inArray(event.keyCode, [38, 40]) >= 0 && index >= 0) {
       var newIndex,
         size = $('.result', $results).length;
       switch (event.keyCode) {
@@ -218,7 +215,7 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
         break;
       }
       disableMouseHighlight = true;
-      setHighlighted(newIndex, 'key', true);
+      setHighlighted(newIndex, true);
       return false;
     }
     // A select key has been pressed
@@ -232,13 +229,13 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
 
   inputEvents.keyup = inputEvents.click = reprocess;
 
-  $results.delegate('.result', {
+  $('.result', $results[0]).live({
     // When the user hovers a result with the mouse, highlight it.
-    mouseenter: function() {
+    mouseover: function() {
       if (disableMouseHighlight) {
         return;
       }
-      setHighlighted($('.result', $results).index($(this)), 'mouse');
+      setHighlighted($('.result', $results).index($(this)));
     },
     mousemove: function() {
       // Enable mouseover again.
@@ -261,13 +258,6 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
       preventBlurTimer = null;
     }, 50);
     return false;
-  });
-
-  // If auto highlight is off, remove highlighting
-  $results.mouseleave(function() {
-    if (!options.autoHighlight) {
-      setHighlighted(-1);
-    }
   });
 
   /*
@@ -337,35 +327,17 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
    * Set highlight to a specific result item
    *
    * @param {Number} index
-   *   The result item's index, or negative if highlight should be removed.
-   *
-   * @param {String} [trigger]
-   *   What triggered the highlight: "mouse", "key" or "auto". If index is
-   *   negative trigger may be omitted.
+   *   The result's index, starting at 0.
    *
    * @param {Boolean} [autoScroll]
    *   (default=false) If scrolling of the results list should be automated.
    */
-  var setHighlighted = function(index, trigger, autoScroll) {
-    //console.log('Index: '+index)
-    var prevIndex = getHighlightedIndex(),
-      $resultList = $('.result', $results);
-    //console.log('prevIndex: '+prevIndex)
-    $resultList.removeClass('highlight');
-
-    if (index < 0) {
-      return
-    }
-    $resultList.eq(index).addClass('highlight')
-
-    if (prevIndex != index) {
-      var result = getResultByIndex(index);
-      callbacks.highlight(result, $input, trigger);
-    }
-
-    // Scrolling
-    var up = index == 0 || index < prevIndex,
-      $scrollTo = $resultList.eq(index);
+  var setHighlighted = function(index, autoScroll) {
+    // Scrolling upwards
+    var up = index == 0 || index < getHighlighted(),
+      $scrollTo = $('.result', $results)
+        .removeClass('highlight')
+        .eq(index).addClass('highlight');
 
     if (!autoScroll) {
       return;
@@ -392,35 +364,19 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
    * @returns {Number}
    *   The result's index or -1 if no result is highlighted.
    */
-  var getHighlightedIndex = function() {
-    var res = $('.result.highlight', $results)
-    ind= $('.result', $results).index(res);
-    return ind
-  };
-
-  /**
-   * Retrieve the result object with the specific position in the results list
-   *
-   * @param {Number} index
-   *   The index of the item in the current result list.
-   *
-   * @returns {Object}
-   *   The result object or null if index out of bounds.
-   */
-  var getResultByIndex = function(index) {
-    var $result = $('.result', $results).eq(index);
-    if (!$result.length) {
-      return; // No selectable element
-    }
-    return $result.data('result');
+  var getHighlighted = function() {
+    return $('.result', $results).index($('.result.highlight', $results));
   };
 
   /**
    * Select the current highlighted element, if any.
    */
   var select = function() {
-    var highlighted = getHighlightedIndex(),
-      result = getResultByIndex(highlighted);
+    var $result = $('.result', $results).eq(getHighlighted());
+    if (!$result.length) {
+      return; // No selectable element
+    }
+    var result = $result.data('result');
     callbacks.select(result, $input);
     // Redraw again, if the callback changed focus or content
     reprocess();
@@ -466,16 +422,8 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
   /**
    * Reprocess the contents of the input field, fetch data and redraw if
    * necessary.
-   *
-   * @param {Object} [event]
-   *   The event that triggered the reprocessing. Not always present.
    */
-  function reprocess(event) {
-    // If this call was triggered by an arrow key, cancel the reprocessing.
-    if ($.type(event) == 'object' && event.type == 'keyup' &&
-        $.inArray(event.keyCode, [38, 40]) >= 0) {
-      return;
-    }
+  function reprocess() {
     var query = callbacks.canonicalQuery($input.val(), options.caseSensitive);
     clearTimeout(timer);
     // Indicate that timer is inactive
@@ -515,9 +463,7 @@ var BetterAutocomplete = function($input, resource, options, callbacks) {
     else if (lastRenderedQuery !== query) {
       lastRenderedQuery = query;
       renderResults(cache[query]);
-      if (options.autoHighlight && $('.result', $results).length > 0) {
-        setHighlighted(0, 'auto');
-      }
+      setHighlighted(0);
     }
     // Finally show/hide based on focus and emptiness
     if (($input.is(':focus') || focus) && !$results.is(':empty')) {
@@ -621,34 +567,6 @@ var defaultCallbacks = {
    */
   select: function(result, $input) {
     $input.val(result.title);
-  },
-
-  /**
-   * Gets fired when the a result is highlighted. This may happen either
-   * automatically or by user action.
-   *
-   * <br /><br /><em>Default behavior: Does nothing.</em>
-   *
-   * @param {Object} result
-   *   The result object that was selected.
-   *
-   * @param {Object} $input
-   *   The input DOM element, wrapped in jQuery.
-   *
-   * @param {String} trigger
-   *   The event which triggered the highlighting. Must be one of the
-   *   following:
-   *   <ul><li>
-   *     "mouse": A mouseover event triggered the highlighting.
-   *   </li><li>
-   *     "key": The user pressed an arrow key to navigate amongst the results.
-   *   </li><li>
-   *     "auto": If options.autoHighlight is set, an automatic highlight of the
-   *     first result will occur each time a new result set is rendered.
-   *   </li></ul>
-   */
-  highlight: function(result, $input, trigger) {
-    // Does nothing
   },
 
   /**
@@ -860,8 +778,8 @@ var defaultCallbacks = {
   /**
    * Construct the remote fetching URL.
    *
-   * <br /><br /><em>Default behavior: Adds "?q=<query>" or "&q=<query>" to the
-   * path. The query string is URL encoded.</em>
+   * <br /><br /><em>Default behavior: Adds "?q=query" to the path. The query
+   * string is URL encoded.</em>
    *
    * @param {String} path
    *   The path given in the {@link jQuery.betterAutocomplete} constructor.
@@ -874,7 +792,7 @@ var defaultCallbacks = {
    *   The URL, ready for fetching.
    */
   constructURL: function(path, query) {
-    return path + (path.indexOf('?') > -1 ? '&' : '?') + 'q=' + encodeURIComponent(query);
+    return path + '?q=' + encodeURIComponent(query);
   },
 
   /**
@@ -918,6 +836,8 @@ var defaultCallbacks = {
     $results.width($input.outerWidth() - 2) // Subtract border width.
       .css({
         position: 'absolute',
+        left: $input.position().left,
+        top: $input.position().top + $input.outerHeight(),
         zIndex: 10,
         maxHeight: '330px',
         // Visually indicate that results are in the topmost layer
